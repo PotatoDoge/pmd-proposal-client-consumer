@@ -1,0 +1,46 @@
+# Project Context
+
+## Project Name
+PMD Proposal Client Consumer
+
+## What This Project Does
+A Kafka-based event consumer service that processes incoming proposal client requests. It validates business rules, enriches data with domain logic, and publishes processed events for downstream consumption.
+
+## Architecture
+Hexagonal Architecture (Ports and Adapters)
+
+## Layer Structure
+- `domain/` - Pure business logic (no framework dependencies)
+- `application/` - Use cases, ports (in/out), orchestration services
+- `infrastructure/` - Adapters for Kafka (in/out), DTOs, mappers, configs
+
+## Key Architectural Rules
+1. Domain layer must remain framework-agnostic (no Spring annotations)
+2. Business logic goes in domain models or domain services
+3. Application services only orchestrate (no business logic)
+4. Adapters handle DTO ↔ Domain mapping
+5. Input adapters CALL input ports
+6. Output adapters IMPLEMENT output ports
+
+## Technologies
+- Java 21
+- Spring Boot 4.0.2
+- Spring Kafka
+- Maven
+- Lombok (infrastructure only)
+
+## Important Files
+- `ABOUT.md` - Project overview and layer explanations
+- `README.md` - Quick start guide
+
+## Current State
+- Kafka consumer receives ProposalClientEvent
+- Domain model validates and applies business rules
+- Domain service provides multi-entity logic (priority, team assignment)
+- Output adapter publishes to external Kafka topic
+
+## Future TODOs (from comments in code)
+1. Check if client is already saved in DB
+2. If not saved, save it
+3. Generate UUID for proposal and save in DB
+4. Send event to external service with proposal

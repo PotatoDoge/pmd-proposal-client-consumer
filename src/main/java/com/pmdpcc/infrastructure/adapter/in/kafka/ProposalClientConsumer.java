@@ -1,40 +1,33 @@
 package com.pmdpcc.infrastructure.adapter.in.kafka;
 
-import com.pmdpcc.application.usecase.PublishProposalClientUseCase;
+import com.pmdpcc.application.port.in.PublishProposalClientPort;
+import com.pmdpcc.domain.model.ProposalClient;
 import com.pmdpcc.infrastructure.adapter.in.kafka.dto.ProposalClientEvent;
+import com.pmdpcc.infrastructure.adapter.in.kafka.mapper.ProposalClientEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
-@Service
+@Component
 @Slf4j
 @RequiredArgsConstructor
 public class ProposalClientConsumer {
 
-    private final PublishProposalClientUseCase publishProposalClientUseCase;
+    private final PublishProposalClientPort publishProposalClientPort;
+    private final ProposalClientEventMapper mapper;
 
     @KafkaListener(topics = "${spring.kafka.consumer.topic}", groupId = "${spring.kafka.consumer.group-id}")
-    public void consume(ProposalClientEvent proposalClient) {
-        log.info("Received message from Kafka for client: {}", proposalClient.getClientName());
+    public void consume(ProposalClientEvent event) {
+        log.info("Received message from Kafka for client: {}", event.getClientName());
 
         try {
-            processMessage(proposalClient);
-            log.info("Successfully processed message for client: {}", proposalClient.getClientName());
-        } catch (Exception e) {
-            log.error("Error processing Kafka message for client: {}", proposalClient.getClientName(), e);
-            // TODO: Implement error handling strategy (DLQ, retry, etc.)
+            ProposalClient domainModel = mapper.toDomain(event);
+            publishProposalClientPort.publish(domainModel);
+            log.info("Successfully processed message for client: {}", event.getClientName());
         }
-    }
-
-    private void processMessage(ProposalClientEvent proposalClient) {
-        log.info("Processing proposal for client: {}", proposalClient.getClientName());
-        log.info("Industry: {}", proposalClient.getIndustry());
-        log.info("Company Size: {}", proposalClient.getCompanySize());
-        log.info("Budget Range: {} - {} {}",
-                proposalClient.getBudgetRange().getMin(),
-                proposalClient.getBudgetRange().getMax(),
-                proposalClient.getBudgetRange().getCurrency());
-        log.info("Pain Points: {}", proposalClient.getPainPoints());
+        catch (Exception e) {
+            log.error("Error processing Kafka message for client: {}", event.getClientName(), e);
+        }
     }
 }
