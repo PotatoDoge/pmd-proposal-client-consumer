@@ -4,3 +4,8 @@ spring:
     consumer:
       group-id: pmd-proposal-client-consumer-group
       topic: proposal-client-topic
+    producer:
+      topic: proposal-ai-topic
+      group-id: proposal-ai-consumer-group
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
